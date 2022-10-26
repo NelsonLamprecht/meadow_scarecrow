@@ -7,38 +7,66 @@ using System.Threading.Tasks;
 using Meadow;
 using Meadow.Devices;
 using Meadow.Foundation;
-using Meadow.Foundation.Web.Maple.Server;
+using Meadow.Foundation.Web.Maple;
 using Meadow.Gateway.WiFi;
-using Meadow.Gateways;
 using Meadow.Hardware;
 using Meadow.Peripherals.Relays;
+
 using meadow_scarecrow.Controllers;
 
 namespace meadow_scarecrow
 {
-    public class MeadowApp : App<F7FeatherV1, MeadowApp>
+    public class MeadowApp : App<F7FeatherV1>
     {
         private const string appConfigFileName = "app.config.json";
-        private MapleServer _mapleServer;
-       
-        public MeadowApp()
+        
+
+        public override Task Initialize()
+        {
+            Console.WriteLine("Initializing hardware...");
+            Device.Information.DeviceName = "MeadowF7FeatherV1-Scarecrow";
+
+            LedController.Current.Initialize();
+            RelayController.Current.Initialize(Device.CreateDigitalOutputPort(Device.Pins.D05, true, OutputType.OpenDrain), RelayType.NormallyOpen);
+
+            return base.Initialize();
+        }
+
+        public override async Task Run()
         {
             try
             {
-                Device.Information.DeviceName = "MeadowF7v1-Scarecrow";
-                Initialize().Wait();
+                await ConfigureWiFi();
+                LedController.Current.SetColor(Color.Blue);
+                ConfigureMapleServer();
+                LedController.Current.SetColor(Color.Green);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                Console.WriteLine(ex);
+                LedController.Current.SetColor(Color.Red);
             }
         }
 
-        private async Task Initialize()
+        private void ConfigureMapleServer()
         {
             Console.WriteLine("Initializing hardware...");
-            LedController.Current.Initialize();
-            RelayController.Current.Initialize(Device.CreateDigitalOutputPort(Device.Pins.D05, true, OutputType.OpenDrain), RelayType.NormallyOpen);
+            var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
+            
+            var mapleServer = new MapleServer(wifi.IpAddress, advertise: true, processMode: RequestProcessMode.Parallel)
+            {
+                AdvertiseIntervalMs = 1500, // every 1.5 seconds
+                DeviceName = Device.Information.DeviceName
+            };
+            mapleServer.Start();
+        }
+
+        private async Task ConfigureWiFi()
+        {
+            Console.WriteLine("Configuring Wifi...");
+            var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
+
+            await ScanForAccessPoints(wifi);
 
             AppConfigRoot appConfigRoot = await GetAppConfig();
 
@@ -52,33 +80,28 @@ namespace meadow_scarecrow
                 &&
                 appConfigRoot.Network.Wifi.Password != null)
             {
-                if (Enum.TryParse<AntennaType>(appConfigRoot.Network.Wifi.AntennaType, out var antennaType))
-                {
-                    if (antennaType == AntennaType.OnBoard)
-                    {
-                        Device.SetAntenna(AntennaType.OnBoard);
-                    }
-                    else if (antennaType == AntennaType.External)
-                    {
-                        Device.SetAntenna(AntennaType.OnBoard);
-                    }
-                }
                 
-                ConnectionResult connectionResult = await Device.WiFiAdapter.Connect(appConfigRoot.Network.Wifi.SSID, appConfigRoot.Network.Wifi.Password, TimeSpan.FromSeconds(60));
+
+                //if (Enum.TryParse<AntennaType>(appConfigRoot.Network.Wifi.AntennaType, out var antennaType))
+                //{
+                //    if (antennaType == AntennaType.External)
+                //    {
+                //        wifi.SetAntenna(AntennaType.External);
+                //    }
+                //    if (antennaType == AntennaType.OnBoard)
+                //    {
+                //        wifi.SetAntenna(AntennaType.OnBoard);
+                //    }
+                //}
+                
+                ConnectionResult connectionResult = await wifi.Connect(appConfigRoot.Network.Wifi.SSID, appConfigRoot.Network.Wifi.Password);
                 if (connectionResult.ConnectionStatus != ConnectionStatus.Success)
                 {
                     LedController.Current.SetColor(Color.Red);
                     throw new Exception($"Cannot connect to network: {connectionResult.ConnectionStatus}");
                 }
 
-                _mapleServer = new MapleServer(Device.WiFiAdapter.IpAddress, 5417, true, RequestProcessMode.Serial)
-                {
-                    AdvertiseIntervalMs = 1500, // every 1.5 seconds
-                    DeviceName = Device.Information.DeviceName
-                };
-                _mapleServer.Start();
-
-                LedController.Current.SetColor(Color.Green);
+                Console.WriteLine(wifi.IpAddress);
             }
             else
             {
@@ -120,6 +143,28 @@ namespace meadow_scarecrow
                 Console.WriteLine(ex.Message);
             }
             return default;
+        }
+
+        async Task ScanForAccessPoints(IWiFiNetworkAdapter wifi)
+        {
+            Console.WriteLine("Getting list of access points.");
+            var networks = await wifi.Scan(TimeSpan.FromSeconds(60));
+
+            if (networks.Count > 0)
+            {
+                Console.WriteLine("|-------------------------------------------------------------|---------|");
+                Console.WriteLine("|         Network Name             | RSSI |       BSSID       | Channel |");
+                Console.WriteLine("|-------------------------------------------------------------|---------|");
+
+                foreach (WifiNetwork accessPoint in networks)
+                {
+                    Console.WriteLine($"| {accessPoint.Ssid,-32} | {accessPoint.SignalDbStrength,4} | {accessPoint.Bssid,17} |   {accessPoint.ChannelCenterFrequency,3}   |");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No access points detected.");
+            }
         }
     }
 }

@@ -34,8 +34,9 @@ namespace meadow_scarecrow.Controllers
                 device: MeadowApp.Device,
                 redPwmPin: MeadowApp.Device.Pins.OnboardLedRed,
                 greenPwmPin: MeadowApp.Device.Pins.OnboardLedGreen,
-                bluePwmPin: MeadowApp.Device.Pins.OnboardLedBlue);
-            onBoardRGBLed.SetColor(Color.Blue);
+                bluePwmPin: MeadowApp.Device.Pins.OnboardLedBlue,
+                commonType: Meadow.Peripherals.Leds.CommonType.CommonAnode);
+            onBoardRGBLed.SetColor(Color.Yellow);
 
             initialized = true;
 
