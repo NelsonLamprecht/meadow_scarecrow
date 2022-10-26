@@ -19,9 +19,8 @@ namespace meadow_scarecrow
     public class MeadowApp : App<F7FeatherV1>
     {
         private const string appConfigFileName = "app.config.json";
-        
 
-        public override Task Initialize()
+        public override async Task Initialize()
         {
             Console.WriteLine("Initializing hardware...");
             Device.Information.DeviceName = "MeadowF7FeatherV1-Scarecrow";
@@ -29,7 +28,7 @@ namespace meadow_scarecrow
             LedController.Current.Initialize();
             RelayController.Current.Initialize(Device.CreateDigitalOutputPort(Device.Pins.D05, true, OutputType.OpenDrain), RelayType.NormallyOpen);
 
-            return base.Initialize();
+            await base.Initialize();
         }
 
         public override async Task Run()
@@ -46,6 +45,7 @@ namespace meadow_scarecrow
                 Console.WriteLine(ex);
                 LedController.Current.SetColor(Color.Red);
             }
+            await base.Run();
         }
 
         private void ConfigureMapleServer()
@@ -145,7 +145,7 @@ namespace meadow_scarecrow
             return default;
         }
 
-        async Task ScanForAccessPoints(IWiFiNetworkAdapter wifi)
+        private async Task ScanForAccessPoints(IWiFiNetworkAdapter wifi)
         {
             Console.WriteLine("Getting list of access points.");
             var networks = await wifi.Scan(TimeSpan.FromSeconds(60));

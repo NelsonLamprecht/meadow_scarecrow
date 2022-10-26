@@ -21,7 +21,7 @@ namespace meadow_scarecrow
         {
             try
             {
-                LedController.Current.SetColor(Color.Yellow);
+                LedController.Current.SetColor(Color.Orange);
                 Task t = new Task(async () =>
                 {
                     RelayController.Current.TurnOn();
@@ -43,7 +43,7 @@ namespace meadow_scarecrow
         {
             try
             {
-                LedController.Current.SetColor(Color.Yellow);
+                LedController.Current.SetColor(Color.Orange);
                 Task t = new Task(async () =>
                 {
                     RelayController.Current.TurnOff();
