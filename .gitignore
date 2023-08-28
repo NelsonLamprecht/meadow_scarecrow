@@ -350,5 +350,4 @@ MigrationBackup/
 .ionide/
 
 # MonsterBox
-*.config.json
-/meadow_scarecrow/meadow_scarecrow/wifi.config.yaml
+wifi.config.yaml
