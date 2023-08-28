@@ -1,14 +1,10 @@
 ﻿using System;
-using System.IO;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 using Meadow;
 using Meadow.Devices;
 using Meadow.Foundation;
 using Meadow.Foundation.Web.Maple;
-using Meadow.Gateway.WiFi;
 using Meadow.Hardware;
 using Meadow.Peripherals.Relays;
 
@@ -18,15 +14,29 @@ namespace meadow_scarecrow
 {
     public class MeadowApp : App<F7FeatherV1>
     {
-        private const string appConfigFileName = "app.config.json";
+        private IWiFiNetworkAdapter wifi;
 
         public override async Task Initialize()
         {
-            Console.WriteLine("Initializing hardware...");
-            Device.Information.DeviceName = "MeadowF7FeatherV1-Scarecrow";
+            Resolver.Log.Info("Initializing hardware...");
 
-            LedController.Current.Initialize();
-            RelayController.Current.Initialize(Device.CreateDigitalOutputPort(Device.Pins.D05, true, OutputType.OpenDrain), RelayType.NormallyOpen);
+            // This sets up onboard rgb and exits with yellow
+            await LedController.Current.Initialize();
+
+            //RelayController.Current.Initialize(Device.CreateDigitalOutputPort(Device.Pins.D05, true, OutputType.OpenDrain), RelayType.NormallyOpen);
+
+            wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
+            wifi.SetAntenna(AntennaType.External);
+            
+            if (wifi.IsConnected)
+            {
+                Resolver.Log.Info("WiFi adapter already connected.");
+            }
+            else
+            {
+                Resolver.Log.Info("WiFi adapter not connected.");
+                wifi.NetworkConnected += Wifi_NetworkConnected;
+            }
 
             await base.Initialize();
         }
@@ -35,23 +45,49 @@ namespace meadow_scarecrow
         {
             try
             {
-                await ConfigureWiFi();
-                LedController.Current.SetColor(Color.Blue);
-                ConfigureMapleServer();
-                LedController.Current.SetColor(Color.Green);
+                Resolver.Log.Debug($"+Run");
+                StartHeartbeat();
+
+                OutputDeviceInfo();
+                OutputNtpInfo();
+                OutputMeadowOSInfo();
+                OutputDeviceConfigurationInfo();
+
+                LedController.Current?.SetColor(Color.Blue);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-                LedController.Current.SetColor(Color.Red);
+                Resolver.Log.Error(ex.ToString());
+                LedController.Current?.SetColor(Color.Red);
             }
             await base.Run();
         }
 
+        protected void StartHeartbeat()
+        {
+            Resolver.Log.Debug($"+StartHeartbeat");
+
+            Task.Run(async () =>
+            {
+                Resolver.Log.Trace($"Heartbeat Task Started");
+                var countToReset = 1;
+
+                while (true)
+                {
+                    Resolver.Log.Debug($"Count to reset: {countToReset}");
+                    Resolver.Log.Info($"{DateTime.Now} {wifi.IpAddress}");
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+
+                    Resolver.Log.Trace($"Testing for throw");
+                    if (--countToReset <= 0) throw new Exception("Testing restart...");
+
+                }
+            });
+        }
+
         private void ConfigureMapleServer()
         {
-            Console.WriteLine("Initializing hardware...");
-            var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
+            Resolver.Log.Info("Initializing maple server...");
             
             var mapleServer = new MapleServer(wifi.IpAddress, advertise: true, processMode: RequestProcessMode.Parallel)
             {
@@ -61,110 +97,85 @@ namespace meadow_scarecrow
             mapleServer.Start();
         }
 
-        private async Task ConfigureWiFi()
+        void OutputDeviceInfo()
         {
-            Console.WriteLine("Configuring Wifi...");
-            var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
-
-            await ScanForAccessPoints(wifi);
-
-            AppConfigRoot appConfigRoot = await GetAppConfig();
-
-            if (appConfigRoot != null
-                &&
-                appConfigRoot.Network != null
-                &&
-                appConfigRoot.Network.Wifi != null
-                &&
-                appConfigRoot.Network.Wifi.SSID != null
-                &&
-                appConfigRoot.Network.Wifi.Password != null)
-            {
-                
-
-                //if (Enum.TryParse<AntennaType>(appConfigRoot.Network.Wifi.AntennaType, out var antennaType))
-                //{
-                //    if (antennaType == AntennaType.External)
-                //    {
-                //        wifi.SetAntenna(AntennaType.External);
-                //    }
-                //    if (antennaType == AntennaType.OnBoard)
-                //    {
-                //        wifi.SetAntenna(AntennaType.OnBoard);
-                //    }
-                //}
-                
-                ConnectionResult connectionResult = await wifi.Connect(appConfigRoot.Network.Wifi.SSID, appConfigRoot.Network.Wifi.Password);
-                if (connectionResult.ConnectionStatus != ConnectionStatus.Success)
-                {
-                    LedController.Current.SetColor(Color.Red);
-                    throw new Exception($"Cannot connect to network: {connectionResult.ConnectionStatus}");
-                }
-
-                Console.WriteLine(wifi.IpAddress);
-            }
-            else
-            {
-                LedController.Current.SetColor(Color.Red);
-                throw new Exception("Unable to get network configuration from file.");
-            }
+            Resolver.Log.Info($"=========================OutputDeviceInfo==============================");
+            Resolver.Log.Info($"Device name: {Device.Information.DeviceName}");
+            Resolver.Log.Info($"Processor serial number: {Device.Information.ProcessorSerialNumber}");
+            Resolver.Log.Info($"Processor ID: {Device.Information.UniqueID}");
+            Resolver.Log.Info($"Model: {Device.Information.Model}");
+            Resolver.Log.Info($"Processor type: {Device.Information.ProcessorType}");
+            Resolver.Log.Info($"Product: {Device.Information.Model}");
+            Resolver.Log.Info($"Coprocessor type: {Device.Information.CoprocessorType}");
+            Resolver.Log.Info($"Coprocessor firmware version: {Device.Information.CoprocessorOSVersion}");
+            Resolver.Log.Info($"=======================================================================");
         }
 
-        private async Task<AppConfigRoot> GetAppConfig()
+        void OutputNtpInfo()
         {
-            var appConfigFilePath = Path.Combine(MeadowOS.FileSystem.UserFileSystemRoot, appConfigFileName);
-            var appConfig = await GetFileContentsAsync<AppConfigRoot>(appConfigFilePath);
-            if (appConfig != default)
-            {
-                Console.WriteLine(Environment.NewLine);
-                Console.WriteLine("Network:");
-                Console.WriteLine($"\tSSID: {appConfig.Network.Wifi.SSID}");
-                Console.WriteLine($"\tPassword: {appConfig.Network.Wifi.Password}");
-            }
-
-            return appConfig;
+            Resolver.Log.Info($"=========================OutputMeadowOSInfo============================");
+            Resolver.Log.Info($"NTP Client Enabled: {Device.PlatformOS.NtpClient.Enabled}");
+            Resolver.Log.Info($"=======================================================================");
         }
 
-        private async Task<T> GetFileContentsAsync<T>(string path)
+        void OutputMeadowOSInfo()
         {
-            Console.WriteLine($"\tFile: {Path.GetFullPath(path)} ");
+            Resolver.Log.Info($"=========================OutputMeadowOSInfo============================");
+            Resolver.Log.Info($"OS version: {MeadowOS.SystemInformation.OSVersion}");
+            Resolver.Log.Info($"Runtime version: {MeadowOS.SystemInformation.RuntimeVersion}");
+            Resolver.Log.Info($"Build date: {MeadowOS.SystemInformation.OSBuildDate}");
+            Resolver.Log.Info($"=======================================================================");
+        }
+
+        void OutputDeviceConfigurationInfo()
+        {
             try
             {
-                using (var fileStream = File.Open(path, FileMode.Open, FileAccess.Read))
-                using (var streamReader = new StreamReader(fileStream, Encoding.UTF8))
+                // Retrieve
+                var isF7PlatformOS = Device.PlatformOS is F7PlatformOS;
+                var esp32Wifi = wifi as Esp32Coprocessor;
+                if (isF7PlatformOS && esp32Wifi != null)
                 {
-                    var fileContents = await streamReader.ReadToEndAsync();
-                    var result = JsonSerializer.Deserialize<T>(fileContents);
-                    return result;
+                    Resolver.Log.Info($"====================OutputDeviceConfigurationInfo======================");
+                    Resolver.Log.Info($"Automatically connect to network: {F7PlatformOS.GetBoolean(IPlatformOS.ConfigurationValues.AutomaticallyStartNetwork)}");
+                    Resolver.Log.Info($"Get time at startup: {F7PlatformOS.GetBoolean(IPlatformOS.ConfigurationValues.GetTimeAtStartup)}");
+                    Resolver.Log.Info($"Default access point: {F7PlatformOS.GetString(IPlatformOS.ConfigurationValues.DefaultAccessPoint)}");
+                    // Note: You can also access the maximum retry count via the ESP32 coprocessor using `esp32Wifi.MaximumRetryCount`.
+                    Resolver.Log.Info($"Maximum retry count: {F7PlatformOS.GetUInt(IPlatformOS.ConfigurationValues.MaximumNetworkRetryCount)}");
+                    Resolver.Log.Info($"=======================================================================");
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine(ex.Message);
+                Resolver.Log.Error(e.Message);
             }
-            return default;
         }
 
-        private async Task ScanForAccessPoints(IWiFiNetworkAdapter wifi)
+        void OutputDeviceWifiInfo()
         {
-            Console.WriteLine("Getting list of access points.");
-            var networks = await wifi.Scan(TimeSpan.FromSeconds(60));
+            var isF7PlatformOS = Device.PlatformOS is F7PlatformOS;
+            var esp32Wifi = wifi as Esp32Coprocessor;
+            Resolver.Log.Info($"====================OutputDeviceWifiInfo======================");
 
-            if (networks.Count > 0)
+            if (isF7PlatformOS && esp32Wifi != null)
             {
-                Console.WriteLine("|-------------------------------------------------------------|---------|");
-                Console.WriteLine("|         Network Name             | RSSI |       BSSID       | Channel |");
-                Console.WriteLine("|-------------------------------------------------------------|---------|");
+                Resolver.Log.Info($"DefaultSsid: {esp32Wifi.DefaultSsid}");
+                Resolver.Log.Info($"MacAddress: {esp32Wifi.MacAddress}");
+                Resolver.Log.Info($"IpAddress: {esp32Wifi.IpAddress}");
+            }
 
-                foreach (WifiNetwork accessPoint in networks)
-                {
-                    Console.WriteLine($"| {accessPoint.Ssid,-32} | {accessPoint.SignalDbStrength,4} | {accessPoint.Bssid,17} |   {accessPoint.ChannelCenterFrequency,3}   |");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"No access points detected.");
-            }
+            Resolver.Log.Info($"==============================================================");
+        }        
+
+        private void Wifi_NetworkConnected(INetworkAdapter sender, NetworkConnectionEventArgs args)
+        {
+            OutputDeviceWifiInfo();
+            LedController.Current.SetColor(Color.Purple);
+
+            ConfigureMapleServer();
+
+            LedController.Current?.SetColor(Color.Green);
         }
+
     }
 }

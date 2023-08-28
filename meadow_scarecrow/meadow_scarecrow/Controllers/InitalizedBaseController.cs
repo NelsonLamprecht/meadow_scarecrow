@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Meadow;
+using System;
+using System.Threading.Tasks;
 
 namespace meadow_scarecrow.Controllers
 {
@@ -6,15 +8,16 @@ namespace meadow_scarecrow.Controllers
     {
         protected bool initialized = false;
 
-        public virtual void Initialize()
+        public virtual Task Initialize()
         {
-            Console.WriteLine(Environment.NewLine);
-            Console.WriteLine($"{GetType().Name} is initialized.");
+            Resolver.Log.Info(Environment.NewLine);
+            Resolver.Log.Info($"{GetType().Name} is initialized.");
+            return Task.CompletedTask;
         }
     }
 
     internal interface IInitalize
     {
-        void Initialize();
+        Task Initialize();
     }
 }

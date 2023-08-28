@@ -7,7 +7,7 @@ using Meadow.Foundation;
 
 namespace meadow_scarecrow.Controllers
 {
-    internal class LedController: InitalizedBaseController
+    internal class LedController : InitalizedBaseController
     {
         RgbPwmLed onBoardRGBLed;
 
@@ -23,15 +23,14 @@ namespace meadow_scarecrow.Controllers
             Current = new LedController();
         }
 
-        public override void Initialize()
+        public override Task Initialize()
         {
             if (initialized)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             onBoardRGBLed = new RgbPwmLed(
-                device: MeadowApp.Device,
                 redPwmPin: MeadowApp.Device.Pins.OnboardLedRed,
                 greenPwmPin: MeadowApp.Device.Pins.OnboardLedGreen,
                 bluePwmPin: MeadowApp.Device.Pins.OnboardLedBlue,
@@ -40,12 +39,12 @@ namespace meadow_scarecrow.Controllers
 
             initialized = true;
 
-            base.Initialize();
+            return base.Initialize();
         }
 
         void Stop()
         {
-            onBoardRGBLed.Stop();
+            onBoardRGBLed.StopAnimation();
             cancellationTokenSource?.Cancel();
         }
 
@@ -82,7 +81,7 @@ namespace meadow_scarecrow.Controllers
 
         public void StartRunningColors()
         {
-            onBoardRGBLed.Stop();
+            onBoardRGBLed.StopAnimation();
 
             animationTask = new Task(async () =>
             {
