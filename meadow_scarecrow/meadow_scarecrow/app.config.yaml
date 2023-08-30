@@ -3,4 +3,4 @@ Logging:
     Default: "Debug"
 Lifecycle:
   ResetOnAppFailure: true
-  AppFailureRestartDelaySeconds: 10
+  AppFailureRestartDelaySeconds: 30

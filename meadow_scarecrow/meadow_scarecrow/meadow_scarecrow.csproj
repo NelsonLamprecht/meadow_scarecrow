@@ -7,6 +7,9 @@
     <UserSecretsId>95367c51-a945-4cbd-b060-d04df25214e7</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Meadow.F7" Version="1.2.0" />
     <PackageReference Include="Meadow.Foundation" Version="1.2.0" />
     <PackageReference Include="Meadow.Foundation.Audio.Mp3.Yx5300" Version="1.2.0" />

@@ -4,23 +4,24 @@ using System.Threading;
 
 using Meadow.Foundation.Leds;
 using Meadow.Foundation;
+using Meadow.Devices;
 
-namespace meadow_scarecrow.Controllers
+namespace meadow_scarecrow.Controllers.LEDController
 {
-    internal class LedController : InitalizedBaseController
+    internal partial class LEDController : InitalizedBaseController
     {
         RgbPwmLed onBoardRGBLed;
 
         Task animationTask = null;
         CancellationTokenSource cancellationTokenSource = null;
 
-        public static LedController Current { get; private set; }
+        public static LEDController Current { get; private set; }
 
-        private LedController() { }
+        private LEDController() { }
 
-        static LedController()
+        static LEDController()
         {
-            Current = new LedController();
+            Current = new LEDController();
         }
 
         public override Task Initialize()
