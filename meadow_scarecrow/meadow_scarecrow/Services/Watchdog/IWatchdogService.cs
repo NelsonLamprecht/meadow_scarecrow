@@ -1,11 +1,10 @@
-﻿using System;
-
-namespace meadow_scarecrow.Services.Watchdog
+﻿namespace meadow_scarecrow.Services.Watchdog
 {
     internal interface IWatchdogService: IRunableService
     {
-        void EnableWatchdog(int watchdogInSeconds);
+        // device will reset inSeconds if not petted
+        void Enable(int inSeconds);
 
-        void PetWatchdog(int watchdogInSeconds);
+        void Pet(int inSeconds);
     }
 }
