@@ -1,9 +1,8 @@
 ﻿using Meadow.Foundation;
-using Meadow.Foundation.Leds;
 
-namespace meadow_scarecrow.Services.LEDDevice
+namespace meadow_scarecrow.Controllers.LEDController
 {
-    public interface ILEDDevice
+    public interface ILEDDeviceController
     {
         void SetColor(Color color);
 

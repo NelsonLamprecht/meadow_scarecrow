@@ -3,8 +3,7 @@ using Meadow.Devices;
 using Meadow.Foundation;
 using Meadow.Hardware;
 using Meadow.Logging;
-
-using meadow_scarecrow.Services.LEDDevice;
+using meadow_scarecrow.Controllers.LEDController;
 
 namespace meadow_scarecrow.Services.DiagnosticsService
 {
@@ -14,9 +13,9 @@ namespace meadow_scarecrow.Services.DiagnosticsService
 
         private readonly IMeadowDevice device;
         private readonly INetworkAdapter networkAdapter;
-        private readonly ILEDDevice ledDevice;
+        private readonly ILEDDeviceController ledDevice;
 
-        public DiagnosticsService(Logger logger, IMeadowDevice device, INetworkAdapter wifi, ILEDDevice ledDevice) : base(logger)
+        public DiagnosticsService(Logger logger, IMeadowDevice device, INetworkAdapter wifi, ILEDDeviceController ledDevice) : base(logger)
         {
             this.device = device;
             this.networkAdapter = wifi;

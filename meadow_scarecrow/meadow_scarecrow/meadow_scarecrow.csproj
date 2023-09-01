@@ -27,7 +27,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Controllers\LEDController\" />
-  </ItemGroup>
 </Project>

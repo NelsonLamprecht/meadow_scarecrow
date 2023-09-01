@@ -4,8 +4,6 @@ using System.Threading;
 using Meadow;
 using Meadow.Logging;
 
-using meadow_scarecrow.Services.LEDDevice;
-
 namespace meadow_scarecrow.Services.Watchdog
 {
     internal class WatchdogService : BaseService, IWatchdogService

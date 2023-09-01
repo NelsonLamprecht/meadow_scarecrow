@@ -3,16 +3,16 @@ using System.Threading.Tasks;
 
 using Meadow.Foundation;
 using Meadow.Hardware;
+using meadow_scarecrow.Controllers.LEDController;
 using meadow_scarecrow.Controllers.RelayController;
 using meadow_scarecrow.Services.DiagnosticsService;
-using meadow_scarecrow.Services.LEDDevice;
 using meadow_scarecrow.Services.Watchdog;
 
 namespace meadow_scarecrow
 {
     public class MeadowApp : MeadowBase
     {
-        private ILEDDevice _ledDevice;
+        private ILEDDeviceController _ledDevice;
 
         public override async Task Initialize()
         {
@@ -21,7 +21,8 @@ namespace meadow_scarecrow
 
             Services.Add(network);
 
-            _ledDevice = Services.Create<OnBoardLEDDevice, ILEDDevice>();
+            //rework the device dependancy for the controller so its not just the meadow device
+            _ledDevice = Services.Create<OnBoardLEDDeviceController, ILEDDeviceController>();
             Services.Create<WatchdogService, IWatchdogService>();
 
             Services.Create<DiagnosticsService>();

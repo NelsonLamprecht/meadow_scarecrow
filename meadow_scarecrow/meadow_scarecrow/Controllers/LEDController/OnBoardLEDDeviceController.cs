@@ -1,20 +1,20 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 using Meadow;
 using Meadow.Devices;
 using Meadow.Foundation.Leds;
 using Meadow.Foundation;
-using System;
 
-namespace meadow_scarecrow.Services.LEDDevice
+namespace meadow_scarecrow.Controllers.LEDController
 {
-    public class OnBoardLEDDevice : ILEDDevice
+    public class OnBoardLEDDeviceController : ILEDDeviceController
     {
         CancellationTokenSource cancellationTokenSource = null;
         private readonly IMeadowDevice device;
         private readonly RgbPwmLed rgbLed = null;
 
-        public OnBoardLEDDevice(IMeadowDevice device)
+        public OnBoardLEDDeviceController(IMeadowDevice device)
         {
             this.device = device;
 
@@ -27,7 +27,7 @@ namespace meadow_scarecrow.Services.LEDDevice
                     bluePwmPin: f7DeviceV1.Pins.OnboardLedBlue,
                     commonType: Meadow.Peripherals.Leds.CommonType.CommonAnode);
             }
-            
+
             rgbLed?.StartBlink(Color.White);
         }
 
@@ -46,7 +46,7 @@ namespace meadow_scarecrow.Services.LEDDevice
         public void StartBlink(Color color)
         {
             Stop();
-            rgbLed?.StartBlink(color,TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
+            rgbLed?.StartBlink(color, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
         }
 
         public void TurnOn()
