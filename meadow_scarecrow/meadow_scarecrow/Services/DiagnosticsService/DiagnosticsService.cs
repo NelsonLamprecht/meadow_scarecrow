@@ -74,7 +74,7 @@ namespace meadow_scarecrow.Services.DiagnosticsService
             {
                 OutputDeviceWifiInfo();
             }
-            ledDevice.StartBlink(Color.Green);
+            ledDevice.SetColor(Color.Green);
         }
     }
 }

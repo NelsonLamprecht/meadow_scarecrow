@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Meadow;
 using Meadow.Foundation;
 using Meadow.Hardware;
-using meadow_scarecrow.Controllers.RelayController;
+
 using meadow_scarecrow.Services.DiagnosticsService;
 using meadow_scarecrow.Services.LEDDevice;
 using meadow_scarecrow.Services.Watchdog;
@@ -12,20 +13,24 @@ namespace meadow_scarecrow
 {
     public class MeadowApp : MeadowBase
     {
+        private IWiFiNetworkAdapter _wifiAdapter;
         private ILEDDevice _ledDevice;
-
+        private DiagnosticsService _diagnostics;
+        
         public override async Task Initialize()
         {
             var network = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
             network.SetAntenna(AntennaType.External);
 
-            Services.Add(network);
+            Resolver.Services.Add(network);
 
-            _ledDevice = Services.Create<OnBoardLEDDevice, ILEDDevice>();
-            Services.Create<WatchdogService, IWatchdogService>();
+            Resolver.Services.Create<OnBoardLEDDevice, ILEDDevice>();
+            Resolver.Services.Create<WatchdogService, IWatchdogService>();
 
-            Services.Create<DiagnosticsService>();
-            Services.Create<RelayController>();
+            // when succesfull, this sets LED to green
+            Resolver.Services.Create<DiagnosticsService>();
+
+            ////RelayController.Current.Initialize(Device.CreateDigitalOutputPort(Device.Pins.D05, true, OutputType.OpenDrain), RelayType.NormallyOpen);
 
             await base.Initialize();
         }
@@ -36,22 +41,19 @@ namespace meadow_scarecrow
             {
                 Logger.Debug($"+Run");
 
-                var diagnostics = Services.Get<DiagnosticsService>();
-                diagnostics.OutputDeviceInfo();
-                diagnostics.OutputMeadowOSInfo();
-                diagnostics.OutputNtpInfo();
+                _diagnostics = Services.Get<DiagnosticsService>();
+                _diagnostics.OutputDeviceInfo();
+                _diagnostics.OutputMeadowOSInfo();
+                _diagnostics.OutputNtpInfo();
 
                 var w = Services.Get<IWatchdogService>();
-                w.Enable(15);
-                w.Pet(10);
+                w.EnableWatchdog(15);
+                w.PetWatchdog(10);
+                _ledDevice.SetColor(Color.Blue);
 
-                var relayController = Services.Get<RelayController>();
-                relayController.Initialize(Device.Pins.D05);
-                _ledDevice.StartBlink(Color.Blue);
-
-                var wifiAdapter = Services.Get<IWiFiNetworkAdapter>();
+                _wifiAdapter = Services.Get<IWiFiNetworkAdapter>();
                 // this will set led to green to indicate ready to go
-                wifiAdapter.NetworkConnected += diagnostics.NetworkConnected;
+                _wifiAdapter.NetworkConnected += _diagnostics.NetworkConnected;
             }
 
             catch (Exception ex)
