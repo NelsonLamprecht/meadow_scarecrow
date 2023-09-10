@@ -6,6 +6,7 @@ using Meadow.Hardware;
 using meadow_scarecrow.Controllers.LEDController;
 using meadow_scarecrow.Controllers.RelayController;
 using meadow_scarecrow.Services.DiagnosticsService;
+using meadow_scarecrow.Services.NetworkService;
 using meadow_scarecrow.Services.Watchdog;
 
 namespace meadow_scarecrow
@@ -27,6 +28,7 @@ namespace meadow_scarecrow
 
             Services.Create<DiagnosticsService>();
             Services.Create<RelayController>();
+            Services.Create<NetworkService>();
 
             await base.Initialize();
         }
@@ -48,11 +50,12 @@ namespace meadow_scarecrow
 
                 var relayController = Services.Get<RelayController>();
                 relayController.Initialize(Device.Pins.D05);
+
                 _ledDevice.StartBlink(Color.Blue);
 
                 var wifiAdapter = Services.Get<IWiFiNetworkAdapter>();
                 // this will set led to green to indicate ready to go
-                wifiAdapter.NetworkConnected += diagnostics.NetworkConnected;
+                wifiAdapter.NetworkConnected += Services.Get<NetworkService>().NetworkConnected;
             }
 
             catch (Exception ex)
@@ -62,18 +65,5 @@ namespace meadow_scarecrow
             }
             await base.Run();
         }
-
-        //private void ConfigureMapleServer()
-        //{
-        //    Resolver.Log.Info("Initializing maple server...");
-
-        //    var mapleServer = new MapleServer(wifi.IpAddress, advertise: true, processMode: RequestProcessMode.Parallel)
-        //    {
-        //        AdvertiseIntervalMs = 1500, // every 1.5 seconds
-        //        DeviceName = Device.Information.DeviceName
-        //    };
-        //    mapleServer.Start();
-        //}
-
     }
 }

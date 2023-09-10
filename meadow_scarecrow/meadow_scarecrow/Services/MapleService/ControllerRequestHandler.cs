@@ -21,12 +21,10 @@
 //        {
 //            try
 //            {
-//                LedController.Current.SetColor(Color.Orange);
 //                Task t = new Task(async () =>
 //                {
-//                    RelayController.Current.TurnOn();
+                    
 //                    await Task.Delay(250);
-//                    LedController.Current.SetColor(Color.Green);
 //                });
 //                t.Start();
 //                await Task.CompletedTask;
@@ -42,13 +40,11 @@
 //        public async Task<IActionResult> DownAsync()
 //        {
 //            try
-//            {
-//                LedController.Current.SetColor(Color.Orange);
+//            {                
 //                Task t = new Task(async () =>
 //                {
 //                    RelayController.Current.TurnOff();
 //                    await Task.Delay(250);
-//                    LedController.Current.SetColor(Color.Green);
 //                });
 //                t.Start();
 //                await Task.CompletedTask;

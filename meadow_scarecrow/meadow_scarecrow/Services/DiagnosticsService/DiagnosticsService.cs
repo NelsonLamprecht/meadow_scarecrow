@@ -52,7 +52,7 @@ namespace meadow_scarecrow.Services.DiagnosticsService
             Logger.Info(outputFooter);
         }
 
-        void OutputDeviceWifiInfo()
+        public void OutputDeviceWifiInfo()
         {
             var isF7PlatformOS = device.PlatformOS is F7PlatformOS;
             if (isF7PlatformOS && networkAdapter is Esp32Coprocessor esp32Wifi)
@@ -64,16 +64,6 @@ namespace meadow_scarecrow.Services.DiagnosticsService
             }
 
             Logger.Info(outputFooter);
-        }
-
-        public void NetworkConnected(INetworkAdapter sender, NetworkConnectionEventArgs args)
-        {
-            var isF7PlatformOS = device.PlatformOS is F7PlatformOS;
-            if (isF7PlatformOS && networkAdapter is Esp32Coprocessor esp32Wifi)
-            {
-                OutputDeviceWifiInfo();
-            }
-            ledDevice.StartBlink(Color.Green);
         }
     }
 }

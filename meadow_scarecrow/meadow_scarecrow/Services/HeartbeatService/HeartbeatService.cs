@@ -6,7 +6,7 @@ using Meadow.Logging;
 namespace meadow_scarecrow.Services.HeartbeatService
 {
     // right now, used to test restarts
-    internal class HeartbeatService : BaseService, IRunableService
+    internal class HeartbeatService : BaseService
     {
         public HeartbeatService(Logger logger) : base(logger)
         {
