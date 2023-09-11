@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace meadow_scarecrow.Services
 {
-    internal class BaseService: IRunableService
+    public class BaseService: IRunableService
     {
         public BaseService(Logger logger)
         {

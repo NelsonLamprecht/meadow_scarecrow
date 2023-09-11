@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 
 using Meadow.Foundation;
 using Meadow.Hardware;
+
 using meadow_scarecrow.Controllers.LEDController;
 using meadow_scarecrow.Controllers.RelayController;
 using meadow_scarecrow.Services.DiagnosticsService;
+using meadow_scarecrow.Services.MapleService;
 using meadow_scarecrow.Services.NetworkService;
 using meadow_scarecrow.Services.Watchdog;
 
@@ -19,6 +21,7 @@ namespace meadow_scarecrow
         {
             var network = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
             network.SetAntenna(AntennaType.External);
+            network.NetworkConnected += NetworkConnected;
 
             Services.Add(network);
 
@@ -27,8 +30,11 @@ namespace meadow_scarecrow
             Services.Create<WatchdogService, IWatchdogService>();
 
             Services.Create<DiagnosticsService>();
-            Services.Create<RelayController>();
+            var relayController = Services.Create<RelayController>();
+            relayController.Initialize(Device.Pins.D05);
+
             Services.Create<NetworkService>();
+            Services.Create<MapleService>();
 
             await base.Initialize();
         }
@@ -49,13 +55,9 @@ namespace meadow_scarecrow
                 w.Pet(10);
 
                 var relayController = Services.Get<RelayController>();
-                relayController.Initialize(Device.Pins.D05);
+                await relayController.Run();
 
                 _ledDevice.StartBlink(Color.Blue);
-
-                var wifiAdapter = Services.Get<IWiFiNetworkAdapter>();
-                // this will set led to green to indicate ready to go
-                wifiAdapter.NetworkConnected += Services.Get<NetworkService>().NetworkConnected;
             }
 
             catch (Exception ex)
@@ -64,6 +66,18 @@ namespace meadow_scarecrow
                 Logger.Error(ex.ToString());
             }
             await base.Run();
+        }
+
+        private void NetworkConnected(INetworkAdapter sender, NetworkConnectionEventArgs args)
+        {
+            var networkService = Services.Get<NetworkService>();
+            networkService.NetworkIsConnected(sender);
+            
+            var mapleService = Services.Get<MapleService>();
+            mapleService.Run();
+
+            var ledDeviceController = Services.Get<ILEDDeviceController>();
+            ledDeviceController.StartBlink(Color.Green);
         }
     }
 }

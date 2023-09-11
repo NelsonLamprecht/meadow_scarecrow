@@ -11,26 +11,24 @@ namespace meadow_scarecrow.Services.NetworkService
     internal class NetworkService: BaseService
     {
         private readonly IMeadowDevice meadowDevice;
-        private readonly ILEDDeviceController ledDevice;
         private readonly DiagnosticsService.DiagnosticsService diagnosticsService;
 
-        public NetworkService(Logger logger, IMeadowDevice meadowDevice, ILEDDeviceController ledDevice, DiagnosticsService.DiagnosticsService diagnosticsService) : base(logger)
+        public NetworkService(Logger logger,
+            IMeadowDevice meadowDevice,
+            DiagnosticsService.DiagnosticsService diagnosticsService) : base(logger)
         {
             this.meadowDevice = meadowDevice;
-            this.ledDevice = ledDevice;
             this.diagnosticsService = diagnosticsService;
         }
 
-        public void NetworkConnected(INetworkAdapter sender, NetworkConnectionEventArgs args)
+        public void NetworkIsConnected(INetworkAdapter sender)
         {
             var isF7PlatformOS = meadowDevice.PlatformOS is F7PlatformOS;
             var isEspCoprocessor = sender is Esp32Coprocessor esp32Wifi;
             if (isF7PlatformOS && isEspCoprocessor)
             {
                 diagnosticsService.OutputDeviceWifiInfo();
-                ledDevice.StartBlink(Color.Green);
             }
-            
         }
     }
 }

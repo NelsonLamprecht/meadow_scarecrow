@@ -1,13 +1,13 @@
 ﻿using Meadow;
 using Meadow.Devices;
-using Meadow.Foundation;
 using Meadow.Hardware;
 using Meadow.Logging;
+
 using meadow_scarecrow.Controllers.LEDController;
 
 namespace meadow_scarecrow.Services.DiagnosticsService
 {
-    internal class DiagnosticsService : BaseService
+    public class DiagnosticsService : BaseService
     {
         private const string outputFooter = "=======================================================================";
 

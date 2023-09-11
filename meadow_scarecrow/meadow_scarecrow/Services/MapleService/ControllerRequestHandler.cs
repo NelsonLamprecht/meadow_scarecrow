@@ -1,59 +1,69 @@
-﻿//using System;
-//using System.Diagnostics;
-//using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
-//using Meadow.Foundation;
-//using Meadow.Foundation.Web.Maple;
-//using Meadow.Foundation.Web.Maple.Routing;
+using Meadow;
+using Meadow.Foundation.Web.Maple;
+using Meadow.Foundation.Web.Maple.Routing;
+using Meadow.Logging;
 
-//using meadow_scarecrow.Controllers;
+using meadow_scarecrow.Controllers.RelayController;
 
-//namespace meadow_scarecrow
-//{
-//    public class ControllerRequestHandler : RequestHandlerBase
-//    {
-//        public ControllerRequestHandler() { }
+namespace meadow_scarecrow
+{
+    public class ControllerRequestHandler : RequestHandlerBase
+    {
+        public ControllerRequestHandler()
+        {
+        }
 
-//        public override bool IsReusable => true;
+        public override bool IsReusable => true;
 
-//        [HttpPost("/up")]
-//        public async Task<IActionResult> UpAsync()
-//        {
-//            try
-//            {
-//                Task t = new Task(async () =>
-//                {
-                    
-//                    await Task.Delay(250);
-//                });
-//                t.Start();
-//                await Task.CompletedTask;
-//            }
-//            catch (Exception ex)
-//            {
-//                Debug.WriteLine(ex);
-//            }
-//            return new OkResult();
-//        }
+        private Logger Logger { 
+            get
+            {
+                return Resolver.Log;
+            }
+        }
 
-//        [HttpPost("/down")]
-//        public async Task<IActionResult> DownAsync()
-//        {
-//            try
-//            {                
-//                Task t = new Task(async () =>
-//                {
-//                    RelayController.Current.TurnOff();
-//                    await Task.Delay(250);
-//                });
-//                t.Start();
-//                await Task.CompletedTask;
-//            }
-//            catch (Exception ex)
-//            {
-//                Debug.WriteLine(ex);
-//            }
-//            return new OkResult();
-//        }
-//    }
-//}
+        private RelayController RelayController
+        {
+            get
+            {
+                return Resolver.Services.Get<RelayController>();
+            }
+        }
+
+
+        [HttpPost("/up")]
+        public async Task<IActionResult> UpAsync()
+        {
+            Logger.Debug("Controller Up");
+            try
+            {
+                RelayController.TurnOn();
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.ToString());
+            }
+            return new OkResult();
+        }
+
+        [HttpPost("/down")]
+        public async Task<IActionResult> DownAsync()
+        {
+            Logger.Debug("Controller Down");
+            try
+            {
+                RelayController.TurnOff();
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.ToString());
+            }
+            return new OkResult();
+        }
+    }
+}

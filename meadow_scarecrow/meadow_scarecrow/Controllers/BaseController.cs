@@ -4,7 +4,7 @@ using Meadow.Logging;
 
 namespace meadow_scarecrow.Controllers
 {
-    internal class BaseController
+    public class BaseController
     {
         public BaseController(Logger logger)
         {
