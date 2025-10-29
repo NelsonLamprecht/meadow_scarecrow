@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-
-using Meadow.Foundation;
+using Meadow;
 using Meadow.Hardware;
 
 using meadow_scarecrow.Controllers.LEDController;

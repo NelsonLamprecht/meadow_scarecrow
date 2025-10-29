@@ -1,9 +1,6 @@
 ﻿using Meadow;
-using Meadow.Devices;
 using Meadow.Hardware;
 using Meadow.Logging;
-
-using meadow_scarecrow.Controllers.LEDController;
 
 namespace meadow_scarecrow.Services.DiagnosticsService
 {
@@ -12,14 +9,10 @@ namespace meadow_scarecrow.Services.DiagnosticsService
         private const string outputFooter = "=======================================================================";
 
         private readonly IMeadowDevice device;
-        private readonly INetworkAdapter networkAdapter;
-        private readonly ILEDDeviceController ledDevice;
 
-        public DiagnosticsService(Logger logger, IMeadowDevice device, INetworkAdapter wifi, ILEDDeviceController ledDevice) : base(logger)
+        public DiagnosticsService(Logger logger, IMeadowDevice device) : base(logger)
         {
             this.device = device;
-            this.networkAdapter = wifi;
-            this.ledDevice = ledDevice;
         }
 
         public void OutputMeadowOSInfo()
@@ -52,18 +45,17 @@ namespace meadow_scarecrow.Services.DiagnosticsService
             Logger.Info(outputFooter);
         }
 
-        public void OutputDeviceWifiInfo()
+        public void OutputDeviceWifiInfo(INetworkAdapter sender)
         {
-            var isF7PlatformOS = device.PlatformOS is F7PlatformOS;
-            if (isF7PlatformOS && networkAdapter is Esp32Coprocessor esp32Wifi)
+            Logger.Info($"====================OutputDeviceWifiInfo===========================");
+            if (sender is IWiFiNetworkAdapter wifi)
             {
-                Logger.Info($"====================OutputDeviceWifiInfo===========================");
-                Logger.Info($"DefaultSsid: {esp32Wifi.DefaultSsid}");
-                Logger.Info($"MacAddress: {esp32Wifi.MacAddress}");
-                Logger.Info($"IpAddress: {esp32Wifi.IpAddress}");
+                Logger.Info($"Ssid: {wifi.Ssid}");
             }
 
+            Logger.Info($"MacAddress: {sender.MacAddress}");
+            Logger.Info($"IpAddress: {sender.IpAddress}");
             Logger.Info(outputFooter);
+            }
         }
     }
-}

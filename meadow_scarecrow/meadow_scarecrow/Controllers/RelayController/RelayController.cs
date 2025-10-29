@@ -38,14 +38,14 @@ namespace meadow_scarecrow.Controllers.RelayController
 
         public void TurnOff()
         {
-            relay.IsOn = !false;
-            Logger.Debug("Relay Is Off.");
+            relay.State = RelayState.Closed;
+            Logger.Debug("Relay Is Closed.");
         }
 
         public void TurnOn()
         {
-            relay.IsOn = !true;
-            Logger.Debug("Relay Is On.");
+            relay.State = RelayState.Open;
+            Logger.Debug("Relay Is Open.");
         }
     }
 }
